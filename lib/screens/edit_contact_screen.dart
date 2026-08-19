@@ -1,80 +1,113 @@
 import 'package:flutter/material.dart';
-import 'package:contact_app/db/database_helper.dart';
-import 'package:contact_app/models/contact.dart';
+import '../models/contact.dart';
+import '../db/database_helper.dart';
 
 class EditContactScreen extends StatefulWidget {
-  final int? contactId;
-  EditContactScreen({this.contactId});
+  final Contact contact;
+  const EditContactScreen({super.key, required this.contact});
 
   @override
-  _EditContactScreenState createState() => _EditContactScreenState();
+  State<EditContactScreen> createState() => _EditContactScreenState();
 }
 
 class _EditContactScreenState extends State<EditContactScreen> {
   final _formKey = GlobalKey<FormState>();
-  Contact? _contact;
-  String _name = '';
-  String _phone = '';
-  String? _email;
+  late TextEditingController _nameController;
+  late TextEditingController _phoneController;
+  late TextEditingController _emailController;
+  late TextEditingController _addressController;
 
   @override
   void initState() {
     super.initState();
-    _load();
+    _nameController = TextEditingController(text: widget.contact.name);
+    _phoneController = TextEditingController(text: widget.contact.phone);
+    _emailController = TextEditingController(text: widget.contact.email);
+    _addressController = TextEditingController(text: widget.contact.address);
   }
 
-  void _load() async {
-    final c = await DatabaseHelper.instance.getContactById(widget.contactId);
-    setState(() {
-      _contact = c;
-      if (c != null) {
-        _name = c.name;
-        _phone = c.phone;
-        _email = c.email;
-      }
-    });
-  }
-
-  void _save() async {
-    if (!_formKey.currentState!.validate() || _contact == null) return;
-    _formKey.currentState!.save();
-    final updated = _contact!.copyWith(name: _name, phone: _phone, email: _email);
-    await DatabaseHelper.instance.updateContact(updated);
-    Navigator.of(context).pop();
+  Future<void> _updateContact() async {
+    if (_formKey.currentState!.validate()) {
+      final updated = widget.contact.copyWith(
+        name: _nameController.text.trim(),
+        phone: _phoneController.text.trim(),
+        email: _emailController.text.trim(),
+        address: _addressController.text.trim(),
+      );
+      await DatabaseHelper.instance.updateContact(updated);
+      if (mounted) Navigator.pop(context, updated);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_contact == null) return Scaffold(body: Center(child: CircularProgressIndicator()));
     return Scaffold(
-      appBar: AppBar(title: Text('Edit Contact')),
-      body: Padding(
-        padding: EdgeInsets.all(16),
+      appBar: AppBar(
+        title: const Text('Edit Contact'),
+        actions: [
+          IconButton(icon: const Icon(Icons.check), onPressed: _updateContact),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
-              TextFormField(
-                initialValue: _name,
-                decoration: InputDecoration(labelText: 'Name'),
-                validator: (v) => (v == null || v.isEmpty) ? 'Enter name' : null,
-                onSaved: (v) => _name = v!.trim(),
+              CircleAvatar(
+                radius: 40,
+                backgroundColor: Colors.deepPurple.shade100,
+                child: const Icon(Icons.camera_alt, color: Colors.deepPurple, size: 32),
               ),
+              const SizedBox(height: 24),
               TextFormField(
-                initialValue: _phone,
-                decoration: InputDecoration(labelText: 'Phone'),
-                validator: (v) => (v == null || v.isEmpty) ? 'Enter phone' : null,
-                onSaved: (v) => _phone = v!.trim(),
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Name',
+                  prefixIcon: Icon(Icons.person),
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) => v == null || v.isEmpty ? 'Name is required' : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _phoneController,
                 keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: 'Phone Number',
+                  prefixIcon: Icon(Icons.phone),
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) => v == null || v.isEmpty ? 'Phone is required' : null,
               ),
+              const SizedBox(height: 16),
               TextFormField(
-                initialValue: _email,
-                decoration: InputDecoration(labelText: 'Email (optional)'),
-                onSaved: (v) => _email = v?.trim(),
+                controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  prefixIcon: Icon(Icons.email),
+                  border: OutlineInputBorder(),
+                ),
               ),
-              SizedBox(height: 16),
-              ElevatedButton(onPressed: _save, child: Text('Save')),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _addressController,
+                decoration: const InputDecoration(
+                  labelText: 'Address',
+                  prefixIcon: Icon(Icons.location_on),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: _updateContact,
+                  child: const Text('Update Contact'),
+                ),
+              ),
             ],
           ),
         ),
