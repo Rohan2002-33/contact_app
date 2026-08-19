@@ -1,46 +1,57 @@
 import 'package:flutter/material.dart';
-import 'package:contact_app/db/database_helper.dart';
-import 'package:contact_app/models/contact.dart';
-import 'package:contact_app/widgets/contact_avatar.dart';
+import '../models/contact.dart';
+import '../db/database_helper.dart';
+import '../widgets/contact_avatar.dart';
+import 'contact_details_screen.dart';
 
 class FavoritesScreen extends StatefulWidget {
+  const FavoritesScreen({super.key});
+
   @override
-  _FavoritesScreenState createState() => _FavoritesScreenState();
+  State<FavoritesScreen> createState() => _FavoritesScreenState();
 }
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
-  Future<List<Contact>>? _future;
+  List<Contact> _favorites = [];
 
   @override
   void initState() {
     super.initState();
-    _future = DatabaseHelper.instance.getFavorites();
+    _loadFavorites();
+  }
+
+  Future<void> _loadFavorites() async {
+    final data = await DatabaseHelper.instance.getFavoriteContacts();
+    setState(() => _favorites = data);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Favorites')),
-      body: FutureBuilder<List<Contact>>(
-        future: _future,
-        builder: (ctx, snap) {
-          if (snap.connectionState != ConnectionState.done) return Center(child: CircularProgressIndicator());
-          final items = snap.data ?? [];
-          if (items.isEmpty) return Center(child: Text('No favorites'));
-          return ListView.builder(
-            itemCount: items.length,
-            itemBuilder: (ctx, i) {
-              final c = items[i];
-              return ListTile(
-                leading: ContactAvatar(name: c.name, isFavorite: c.isFavorite),
-                title: Text(c.name),
-                subtitle: Text(c.phone),
-                onTap: () => Navigator.pushNamed(context, '/details', arguments: {'id': c.id}),
-              );
-            },
-          );
-        },
-      ),
+      appBar: AppBar(title: const Text('Favorites')),
+      body: _favorites.isEmpty
+          ? const Center(child: Text('No favorite contacts yet'))
+          : ListView.builder(
+              itemCount: _favorites.length,
+              itemBuilder: (context, index) {
+                final contact = _favorites[index];
+                return ListTile(
+                  leading: ContactAvatar(name: contact.name),
+                  title: Text(contact.name,
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text(contact.phone),
+                  trailing: const Icon(Icons.star, color: Colors.amber),
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => ContactDetailsScreen(contact: contact)),
+                    );
+                    _loadFavorites();
+                  },
+                );
+              },
+            ),
     );
   }
 }
