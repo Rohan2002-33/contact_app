@@ -2,33 +2,42 @@ import 'package:flutter/material.dart';
 
 class ContactAvatar extends StatelessWidget {
   final String name;
-  final bool isFavorite;
   final double radius;
 
-  ContactAvatar({required this.name, this.isFavorite = false, this.radius = 20});
+  const ContactAvatar({super.key, required this.name, this.radius = 24});
 
-  String get initials {
-    final parts = name.trim().split(RegExp(r'\s+'));
-    if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
-    return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
+  Color _colorFromName(String name) {
+    final colors = [
+      Colors.deepPurple, Colors.blue, Colors.green,
+      Colors.orange, Colors.pink, Colors.teal,
+    ];
+    final index = name.isNotEmpty ? name.codeUnitAt(0) % colors.length : 0;
+    return colors[index];
+  }
+
+  String _initials(String name) {
+    final parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    } else if (parts.isNotEmpty && parts[0].isNotEmpty) {
+      return parts[0][0].toUpperCase();
+    }
+    return '?';
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        CircleAvatar(radius: radius, child: Text(initials)),
-        if (isFavorite)
-          Positioned(
-            right: -4,
-            bottom: -4,
-            child: Container(
-              decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-              child: Icon(Icons.star, size: radius * 0.8, color: Colors.amber),
-            ),
-          ),
-      ],
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: _colorFromName(name),
+      child: Text(
+        _initials(name),
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: radius * 0.7,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 }
