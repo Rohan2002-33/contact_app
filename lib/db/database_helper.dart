@@ -1,49 +1,97 @@
-import 'dart:async';
-import 'package:contact_app/models/contact.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
+import '../models/contact.dart';
 
-/// Simple in-memory database helper for demonstration and assignments.
 class DatabaseHelper {
-  DatabaseHelper._init();
   static final DatabaseHelper instance = DatabaseHelper._init();
+  static Database? _database;
 
-  final List<Contact> _contacts = [];
-  int _autoIncrementId = 1;
+  DatabaseHelper._init();
 
-  Future<List<Contact>> getContacts() async {
-    await Future.delayed(Duration(milliseconds: 50));
-    return List.unmodifiable(_contacts);
+  Future<Database> get database async {
+    if (_database != null) return _database!;
+    _database = await _initDB('contacts.db');
+    return _database!;
   }
 
-  Future<Contact> addContact(Contact c) async {
-    final contact = c.copyWith(id: _autoIncrementId++);
-    _contacts.add(contact);
-    return contact;
+  Future<Database> _initDB(String fileName) async {
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, fileName);
+    return await openDatabase(
+      path,
+      version: 1,
+      onCreate: _createDB,
+    );
   }
 
-  Future<void> updateContact(Contact contact) async {
-    final idx = _contacts.indexWhere((c) => c.id == contact.id);
-    if (idx >= 0) _contacts[idx] = contact;
+  Future _createDB(Database db, int version) async {
+    await db.execute('''
+      CREATE TABLE contacts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        email TEXT,
+        address TEXT,
+        isFavorite INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
   }
 
-  Future<void> deleteContact(int id) async {
-    _contacts.removeWhere((c) => c.id == id);
+  // CREATE
+  Future<int> insertContact(Contact contact) async {
+    final db = await instance.database;
+    return await db.insert('contacts', contact.toMap());
   }
 
-  Future<Contact?> getContactById(int? id) async {
-    if (id == null) return null;
-    return _contacts.firstWhere((c) => c.id == id, orElse: () => null);
+  // READ all
+  Future<List<Contact>> getAllContacts() async {
+    final db = await instance.database;
+    final result = await db.query('contacts', orderBy: 'name ASC');
+    return result.map((map) => Contact.fromMap(map)).toList();
   }
 
-  Future<List<Contact>> getFavorites() async {
-    await Future.delayed(Duration(milliseconds: 30));
-    return _contacts.where((c) => c.isFavorite).toList(growable: false);
+  // READ favorites
+  Future<List<Contact>> getFavoriteContacts() async {
+    final db = await instance.database;
+    final result = await db.query(
+      'contacts',
+      where: 'isFavorite = ?',
+      whereArgs: [1],
+      orderBy: 'name ASC',
+    );
+    return result.map((map) => Contact.fromMap(map)).toList();
   }
 
-  Future<void> toggleFavorite(int id) async {
-    final idx = _contacts.indexWhere((c) => c.id == id);
-    if (idx >= 0) {
-      final c = _contacts[idx];
-      _contacts[idx] = c.copyWith(isFavorite: !c.isFavorite);
-    }
+  // SEARCH by name
+  Future<List<Contact>> searchContacts(String query) async {
+    final db = await instance.database;
+    final result = await db.query(
+      'contacts',
+      where: 'name LIKE ?',
+      whereArgs: ['%$query%'],
+      orderBy: 'name ASC',
+    );
+    return result.map((map) => Contact.fromMap(map)).toList();
+  }
+
+  // UPDATE
+  Future<int> updateContact(Contact contact) async {
+    final db = await instance.database;
+    return await db.update(
+      'contacts',
+      contact.toMap(),
+      where: 'id = ?',
+      whereArgs: [contact.id],
+    );
+  }
+
+  // DELETE
+  Future<int> deleteContact(int id) async {
+    final db = await instance.database;
+    return await db.delete(
+      'contacts',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 }
