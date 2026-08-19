@@ -21,14 +21,39 @@ class _ContactDetailsScreenState extends State<ContactDetailsScreen> {
     _contact = widget.contact;
   }
 
+  Future<void> _toggleFavorite() async {
+    final updated = _contact.copyWith(
+      isFavorite: _contact.isFavorite == 1 ? 0 : 1,
+    );
+    await DatabaseHelper.instance.updateContact(updated);
+    setState(() => _contact = updated);
+  }
+
   Future<void> _confirmDelete() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Contact'),
-        content: Text('Are you sure you want to delete ${_contact.name}?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Column(
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: const BoxDecoration(
+                  color: Color(0xFFFFEBEE), shape: BoxShape.circle),
+              child: const Icon(Icons.delete_outline, color: Colors.red, size: 28),
+            ),
+            const SizedBox(height: 12),
+            const Text('Delete Contact', style: TextStyle(fontSize: 18)),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to delete ${_contact.name}?',
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.center,
         actions: [
-          TextButton(
+          OutlinedButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: const Text('Cancel'),
           ),
@@ -54,58 +79,60 @@ class _ContactDetailsScreenState extends State<ContactDetailsScreen> {
         title: const Text('Contact Details'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit),
+            icon: Icon(
+              _contact.isFavorite == 1 ? Icons.star : Icons.star_border,
+              color: _contact.isFavorite == 1 ? Colors.amber : Colors.white,
+            ),
+            onPressed: _toggleFavorite,
+          ),
+          IconButton(
+            icon: const Icon(Icons.edit_outlined),
             onPressed: () async {
               final updated = await Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => EditContactScreen(contact: _contact)),
+                MaterialPageRoute(
+                    builder: (_) => EditContactScreen(contact: _contact)),
               );
-              if (updated != null) setState(() => _contact = updated as Contact);
+              if (updated != null) {
+                setState(() => _contact = updated as Contact);
+              }
             },
           ),
-          IconButton(icon: const Icon(Icons.delete), onPressed: _confirmDelete),
+          IconButton(
+              icon: const Icon(Icons.delete_outline), onPressed: _confirmDelete),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFF6C63FF)),
-              child: ContactAvatar(name: _contact.name, radius: 48),
-            ),
-            const SizedBox(height: 12),
-            Text(_contact.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            ContactAvatar(name: _contact.name, radius: 50),
+            const SizedBox(height: 14),
+            Text(_contact.name,
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             const SizedBox(height: 24),
             Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               child: Column(
                 children: [
-                  ListTile(
-                    leading: const Icon(Icons.phone),
-                    title: Text(_contact.phone),
-                    subtitle: const Text('Mobile'),
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.email),
-                    title: Text(_contact.email),
-                    subtitle: const Text('Email'),
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.location_on),
-                    title: Text(_contact.address),
-                    subtitle: const Text('Address'),
-                  ),
+                  _detailRow(Icons.phone, _contact.phone, 'Mobile'),
+                  const Divider(height: 1, indent: 56),
+                  _detailRow(Icons.email, _contact.email, 'Email'),
+                  const Divider(height: 1, indent: 56),
+                  _detailRow(Icons.location_on, _contact.address, 'Address'),
                 ],
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _detailRow(IconData icon, String value, String label) {
+    return ListTile(
+      leading: Icon(icon, color: const Color(0xFF5F5FEA)),
+      title: Text(value.isEmpty ? '-' : value),
+      subtitle: Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
     );
   }
 }
