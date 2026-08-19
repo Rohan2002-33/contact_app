@@ -1,17 +1,34 @@
-# contact_app
+# Contact Management App (Flutter)
 
-A new Flutter project.
+A local database CRUD contact manager built with Flutter and SQLite (sqflite).
 
-## Getting Started
+## Features
+- Add, view, update, delete contacts
+- Search contacts by name
+- Favorite contacts (bonus)
+- Light/Dark theme toggle
+- Local storage using SQLite
 
-This project is a starting point for a Flutter application.
+## Screenshots
 
-A few resources to get you started if this is your first Flutter project:
+| Contacts List | Add Contact | Edit Contact |
+|---|---|---|
+| ![Contacts List](screenshots/contacts_list.png) | ![Add Contact](screenshots/add_contact.png) | ![Edit Contact](screenshots/edit_contact.png) |
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+| Contact Details | Delete Confirm | Search |
+|---|---|---|
+| ![Contact Details](screenshots/contact_details.png) | ![Delete](screenshots/delete_dialog.png) | ![Search](screenshots/search.png) |
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+| Favorites | Settings |
+|---|---|
+| ![Favorites](screenshots/favorites.png) | ![Settings](screenshots/settings.png) |
+
+## Tech
+- Flutter
+- sqflite (local SQLite database)
+
+## Run
+\`\`\`
+flutter pub get
+flutter run
+\`\`\`
