@@ -1,4 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:contact_app/screens/contacts_list_screen.dart';
+import 'package:contact_app/screens/add_contact_screen.dart';
+import 'package:contact_app/screens/edit_contact_screen.dart';
+import 'package:contact_app/screens/contact_details_screen.dart';
+import 'package:contact_app/screens/favorites_screen.dart';
+import 'package:contact_app/screens/settings_screen.dart';
+
+void main() => runApp(MyApp());
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Contact App',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      initialRoute: '/',
+      routes: {
+        '/': (ctx) => ContactsListScreen(),
+        '/add': (ctx) => AddContactScreen(),
+        '/favorites': (ctx) => FavoritesScreen(),
+        '/settings': (ctx) => SettingsScreen(),
+      },
+      onGenerateRoute: (settings) {
+        if (settings.name == '/edit') {
+          final args = settings.arguments as Map<String, dynamic>?;
+          return MaterialPageRoute(
+            builder: (_) => EditContactScreen(contactId: args?['id']),
+          );
+        }
+        if (settings.name == '/details') {
+          final args = settings.arguments as Map<String, dynamic>?;
+          return MaterialPageRoute(
+            builder: (_) => ContactDetailsScreen(contactId: args?['id']),
+          );
+        }
+        return null;
+      },
+    );
+  }
+}
+import 'package:flutter/material.dart';
 
 void main() {
   runApp(const MyApp());
