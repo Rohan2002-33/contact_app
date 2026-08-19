@@ -1,70 +1,104 @@
 import 'package:flutter/material.dart';
-import 'package:contact_app/db/database_helper.dart';
-import 'package:contact_app/models/contact.dart';
-import 'package:contact_app/widgets/contact_avatar.dart';
+import '../models/contact.dart';
+import '../db/database_helper.dart';
+import '../widgets/contact_avatar.dart';
+import 'edit_contact_screen.dart';
 
 class ContactDetailsScreen extends StatefulWidget {
-  final int? contactId;
-  ContactDetailsScreen({this.contactId});
+  final Contact contact;
+  const ContactDetailsScreen({super.key, required this.contact});
 
   @override
-  _ContactDetailsScreenState createState() => _ContactDetailsScreenState();
+  State<ContactDetailsScreen> createState() => _ContactDetailsScreenState();
 }
 
 class _ContactDetailsScreenState extends State<ContactDetailsScreen> {
-  Contact? _contact;
+  late Contact _contact;
 
   @override
   void initState() {
     super.initState();
-    _load();
+    _contact = widget.contact;
   }
 
-  void _load() async {
-    final c = await DatabaseHelper.instance.getContactById(widget.contactId);
-    setState(() => _contact = c);
-  }
+  Future<void> _confirmDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Contact'),
+        content: Text('Are you sure you want to delete ${_contact.name}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
 
-  void _delete() async {
-    if (_contact?.id != null) await DatabaseHelper.instance.deleteContact(_contact!.id!);
-    Navigator.of(context).pop();
-  }
-
-  void _toggleFavorite() async {
-    if (_contact?.id != null) await DatabaseHelper.instance.toggleFavorite(_contact!.id!);
-    _load();
+    if (confirmed == true) {
+      await DatabaseHelper.instance.deleteContact(_contact.id!);
+      if (mounted) Navigator.pop(context);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_contact == null) return Scaffold(body: Center(child: CircularProgressIndicator()));
     return Scaffold(
       appBar: AppBar(
-        title: Text('Details'),
+        title: const Text('Contact Details'),
         actions: [
           IconButton(
-            icon: Icon(_contact!.isFavorite ? Icons.star : Icons.star_border),
-            onPressed: _toggleFavorite,
+            icon: const Icon(Icons.edit),
+            onPressed: () async {
+              final updated = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => EditContactScreen(contact: _contact)),
+              );
+              if (updated != null) {
+                setState(() => _contact = updated as Contact);
+              }
+            },
           ),
-          IconButton(
-            icon: Icon(Icons.edit),
-            onPressed: () => Navigator.pushNamed(context, '/edit', arguments: {'id': _contact!.id}).then((_) => _load()),
-          ),
-          IconButton(icon: Icon(Icons.delete), onPressed: _delete),
+          IconButton(icon: const Icon(Icons.delete), onPressed: _confirmDelete),
         ],
       ),
       body: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(children: [ContactAvatar(name: _contact!.name, isFavorite: _contact!.isFavorite), SizedBox(width: 12), Text(_contact!.name, style: TextStyle(fontSize: 20))]),
-            SizedBox(height: 16),
-            Text('Phone: ${_contact!.phone}'),
-            if ((_contact!.email ?? '').isNotEmpty) ...[
-              SizedBox(height: 8),
-              Text('Email: ${_contact!.email}'),
-            ]
+            ContactAvatar(name: _contact.name, radius: 50),
+            const SizedBox(height: 12),
+            Text(_contact.name,
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 24),
+            Card(
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.phone),
+                    title: Text(_contact.phone),
+                    subtitle: const Text('Mobile'),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.email),
+                    title: Text(_contact.email),
+                    subtitle: const Text('Email'),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.location_on),
+                    title: Text(_contact.address),
+                    subtitle: const Text('Address'),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
