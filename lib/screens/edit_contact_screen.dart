@@ -53,11 +53,18 @@ class _EditContactScreenState extends State<EditContactScreen> {
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              CircleAvatar(
-                radius: 40,
-                backgroundColor: Colors.deepPurple.shade100,
-                child: const Icon(Icons.camera_alt, color: Colors.deepPurple, size: 32),
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(shape: BoxShape.circle, color: const Color(0xFF6C63FF).withOpacity(0.12)),
+                  child: const CircleAvatar(
+                    radius: 40,
+                    backgroundColor: Colors.white,
+                    child: Icon(Icons.camera_alt, color: Color(0xFF6C63FF), size: 32),
+                  ),
+                ),
               ),
               const SizedBox(height: 24),
               TextFormField(
@@ -65,7 +72,6 @@ class _EditContactScreenState extends State<EditContactScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Name',
                   prefixIcon: Icon(Icons.person),
-                  border: OutlineInputBorder(),
                 ),
                 validator: (v) => v == null || v.isEmpty ? 'Name is required' : null,
               ),
@@ -76,7 +82,6 @@ class _EditContactScreenState extends State<EditContactScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Phone Number',
                   prefixIcon: Icon(Icons.phone),
-                  border: OutlineInputBorder(),
                 ),
                 validator: (v) => v == null || v.isEmpty ? 'Phone is required' : null,
               ),
@@ -87,7 +92,6 @@ class _EditContactScreenState extends State<EditContactScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Email',
                   prefixIcon: Icon(Icons.email),
-                  border: OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 16),
@@ -96,18 +100,10 @@ class _EditContactScreenState extends State<EditContactScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Address',
                   prefixIcon: Icon(Icons.location_on),
-                  border: OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: _updateContact,
-                  child: const Text('Update Contact'),
-                ),
-              ),
+              ElevatedButton(onPressed: _updateContact, child: const Text('Update Contact')),
             ],
           ),
         ),

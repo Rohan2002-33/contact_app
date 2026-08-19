@@ -62,6 +62,7 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
                 onChanged: _search,
               )
             : const Text('My Contacts'),
+        centerTitle: false,
         leading: _isSearching
             ? IconButton(
                 icon: const Icon(Icons.arrow_back),
@@ -73,7 +74,10 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
                   _loadContacts();
                 },
               )
-            : null,
+            : IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              ),
         actions: [
           if (!_isSearching)
             IconButton(
@@ -94,18 +98,16 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: Colors.deepPurple),
+            DrawerHeader(
+              decoration: const BoxDecoration(color: Color(0xFF6C63FF)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Icon(Icons.people, color: Colors.white, size: 40),
-                  SizedBox(height: 8),
-                  Text('My Contacts',
-                      style: TextStyle(color: Colors.white, fontSize: 20)),
-                  Text('Manage your friends easily',
-                      style: TextStyle(color: Colors.white70, fontSize: 12)),
+                  CircleAvatar(radius: 28, backgroundColor: Colors.white70, child: Icon(Icons.people, color: Color(0xFF6C63FF), size: 28)),
+                  const SizedBox(height: 12),
+                  const Text('My Contacts', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                  const Text('Manage your friends easily', style: TextStyle(color: Colors.white70, fontSize: 12)),
                 ],
               ),
             ),
@@ -156,41 +158,37 @@ class _ContactsListScreenState extends State<ContactsListScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.contact_page_outlined,
-                      size: 100, color: Colors.deepPurple),
+                  const Icon(Icons.contact_page_outlined, size: 100, color: Color(0xFF6C63FF)),
                   const SizedBox(height: 16),
-                  const Text('No contacts yet',
-                      style: TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('No contacts yet', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  const Text('Add your first contact by tapping\nthe + button below.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey)),
+                  const Text('Add your first contact by tapping the + button below.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
                 ],
               ),
             )
-          : ListView.builder(
+          : ListView.separated(
+              padding: const EdgeInsets.symmetric(vertical: 8),
               itemCount: _contacts.length,
+              separatorBuilder: (_, __) => const Divider(height: 1),
               itemBuilder: (context, index) {
                 final contact = _contacts[index];
                 return ListTile(
-                  leading: ContactAvatar(name: contact.name),
-                  title: Text(contact.name,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text('${contact.email}\n${contact.phone}'),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  leading: ContactAvatar(name: contact.name, radius: 22),
+                  title: Text(contact.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text('${contact.email}\n${contact.phone}', style: const TextStyle(height: 1.2)),
                   isThreeLine: true,
-                  trailing: IconButton(
-                    icon: Icon(
-                      contact.isFavorite == 1 ? Icons.star : Icons.star_border,
-                      color: contact.isFavorite == 1 ? Colors.amber : Colors.grey,
+                  trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                    IconButton(
+                      icon: Icon(contact.isFavorite == 1 ? Icons.star : Icons.star_border, color: contact.isFavorite == 1 ? Colors.amber : Colors.grey),
+                      onPressed: () => _toggleFavorite(contact),
                     ),
-                    onPressed: () => _toggleFavorite(contact),
-                  ),
+                    const Icon(Icons.chevron_right, color: Colors.grey),
+                  ]),
                   onTap: () async {
                     await Navigator.push(
                       context,
-                      MaterialPageRoute(
-                          builder: (_) => ContactDetailsScreen(contact: contact)),
+                      MaterialPageRoute(builder: (_) => ContactDetailsScreen(contact: contact)),
                     );
                     _loadContacts();
                   },

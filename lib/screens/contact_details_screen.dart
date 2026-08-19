@@ -58,27 +58,29 @@ class _ContactDetailsScreenState extends State<ContactDetailsScreen> {
             onPressed: () async {
               final updated = await Navigator.push(
                 context,
-                MaterialPageRoute(
-                    builder: (_) => EditContactScreen(contact: _contact)),
+                MaterialPageRoute(builder: (_) => EditContactScreen(contact: _contact)),
               );
-              if (updated != null) {
-                setState(() => _contact = updated as Contact);
-              }
+              if (updated != null) setState(() => _contact = updated as Contact);
             },
           ),
           IconButton(icon: const Icon(Icons.delete), onPressed: _confirmDelete),
         ],
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            ContactAvatar(name: _contact.name, radius: 50),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFF6C63FF)),
+              child: ContactAvatar(name: _contact.name, radius: 48),
+            ),
             const SizedBox(height: 12),
-            Text(_contact.name,
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            Text(_contact.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             const SizedBox(height: 24),
             Card(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               child: Column(
                 children: [
                   ListTile(
@@ -86,11 +88,13 @@ class _ContactDetailsScreenState extends State<ContactDetailsScreen> {
                     title: Text(_contact.phone),
                     subtitle: const Text('Mobile'),
                   ),
+                  const Divider(height: 1),
                   ListTile(
                     leading: const Icon(Icons.email),
                     title: Text(_contact.email),
                     subtitle: const Text('Email'),
                   ),
+                  const Divider(height: 1),
                   ListTile(
                     leading: const Icon(Icons.location_on),
                     title: Text(_contact.address),
