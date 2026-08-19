@@ -28,18 +28,32 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Favorites')),
+      appBar: AppBar(
+        title: const Text('Favorites'),
+        actions: [
+          IconButton(icon: const Icon(Icons.search), onPressed: () {}),
+          IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
+        ],
+      ),
       body: _favorites.isEmpty
-          ? const Center(child: Text('No favorite contacts yet'))
-          : ListView.builder(
+          ? const Center(
+              child: Text('No favorite contacts yet',
+                  style: TextStyle(color: Colors.grey)))
+          : ListView.separated(
+              padding: const EdgeInsets.symmetric(vertical: 8),
               itemCount: _favorites.length,
+              separatorBuilder: (_, __) =>
+                  const Divider(height: 1, indent: 72, color: Color(0xFFEDEDF3)),
               itemBuilder: (context, index) {
                 final contact = _favorites[index];
                 return ListTile(
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
                   leading: ContactAvatar(name: contact.name),
                   title: Text(contact.name,
                       style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text(contact.phone),
+                  subtitle: Text(contact.phone,
+                      style: const TextStyle(color: Colors.grey, fontSize: 12)),
                   trailing: const Icon(Icons.star, color: Colors.amber),
                   onTap: () async {
                     await Navigator.push(
