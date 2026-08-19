@@ -1,53 +1,103 @@
 import 'package:flutter/material.dart';
-import 'package:contact_app/db/database_helper.dart';
-import 'package:contact_app/models/contact.dart';
+import '../models/contact.dart';
+import '../db/database_helper.dart';
 
 class AddContactScreen extends StatefulWidget {
+  const AddContactScreen({super.key});
+
   @override
-  _AddContactScreenState createState() => _AddContactScreenState();
+  State<AddContactScreen> createState() => _AddContactScreenState();
 }
 
 class _AddContactScreenState extends State<AddContactScreen> {
   final _formKey = GlobalKey<FormState>();
-  String _name = '';
-  String _phone = '';
-  String? _email;
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _addressController = TextEditingController();
 
-  void _save() async {
-    if (!_formKey.currentState!.validate()) return;
-    _formKey.currentState!.save();
-    await DatabaseHelper.instance.addContact(Contact(name: _name, phone: _phone, email: _email));
-    Navigator.of(context).pop();
+  Future<void> _saveContact() async {
+    if (_formKey.currentState!.validate()) {
+      final newContact = Contact(
+        name: _nameController.text.trim(),
+        phone: _phoneController.text.trim(),
+        email: _emailController.text.trim(),
+        address: _addressController.text.trim(),
+      );
+      await DatabaseHelper.instance.insertContact(newContact);
+      if (mounted) Navigator.pop(context);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Add Contact')),
-      body: Padding(
-        padding: EdgeInsets.all(16),
+      appBar: AppBar(
+        title: const Text('Add Contact'),
+        actions: [
+          IconButton(icon: const Icon(Icons.check), onPressed: _saveContact),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
-              TextFormField(
-                decoration: InputDecoration(labelText: 'Name'),
-                validator: (v) => (v == null || v.isEmpty) ? 'Enter name' : null,
-                onSaved: (v) => _name = v!.trim(),
+              CircleAvatar(
+                radius: 40,
+                backgroundColor: Colors.deepPurple.shade100,
+                child: const Icon(Icons.camera_alt, color: Colors.deepPurple, size: 32),
               ),
+              const SizedBox(height: 24),
               TextFormField(
-                decoration: InputDecoration(labelText: 'Phone'),
-                validator: (v) => (v == null || v.isEmpty) ? 'Enter phone' : null,
-                onSaved: (v) => _phone = v!.trim(),
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Name',
+                  prefixIcon: Icon(Icons.person),
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) => v == null || v.isEmpty ? 'Name is required' : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _phoneController,
                 keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: 'Phone Number',
+                  prefixIcon: Icon(Icons.phone),
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) => v == null || v.isEmpty ? 'Phone is required' : null,
               ),
+              const SizedBox(height: 16),
               TextFormField(
-                decoration: InputDecoration(labelText: 'Email (optional)'),
-                onSaved: (v) => _email = v?.trim(),
+                controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  prefixIcon: Icon(Icons.email),
+                  border: OutlineInputBorder(),
+                ),
               ),
-              SizedBox(height: 16),
-              ElevatedButton(onPressed: _save, child: Text('Save')),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _addressController,
+                decoration: const InputDecoration(
+                  labelText: 'Address',
+                  prefixIcon: Icon(Icons.location_on),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: _saveContact,
+                  child: const Text('Save Contact'),
+                ),
+              ),
             ],
           ),
         ),
