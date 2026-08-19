@@ -12,55 +12,50 @@ import 'search_screen.dart';
 class ContactsListScreen extends StatefulWidget {
   const ContactsListScreen({super.key});
 
+  @override
+  State<ContactsListScreen> createState() => _ContactsListScreenState();
+}
+
+class _ContactsListScreenState extends State<ContactsListScreen> {
+  List<Contact> _contacts = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadContacts();
+  }
+
+  Future<void> _loadContacts() async {
+    final data = await DatabaseHelper.instance.getAllContacts();
+    setState(() => _contacts = data);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
       appBar: AppBar(
         title: const Text('My Contacts'),
-        centerTitle: false,
-        leading: Builder(builder: (ctx) {
-          return IconButton(icon: const Icon(Icons.menu), onPressed: () => Scaffold.of(ctx).openDrawer());
-        }),
         actions: [
-          if (!_isSearching)
-            IconButton(icon: const Icon(Icons.search), onPressed: () => setState(() => _isSearching = true))
-          else
-            IconButton(
-              icon: const Icon(Icons.clear),
-              onPressed: () {
-                setState(() {
-                  _isSearching = false;
-                  _searchController.clear();
-                });
-                _loadContacts();
-              },
-            ),
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () async {
+              await Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const SearchScreen()));
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.more_vert),
+            onPressed: () {},
+          ),
         ],
-        bottom: _isSearching
-            ? PreferredSize(
-                preferredSize: const Size.fromHeight(64),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                  child: Container(
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).cardColor,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [BoxShadow(color: Colors.black12.withOpacity(0.03), blurRadius: 6, offset: const Offset(0, 2))],
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      autofocus: true,
-                      decoration: const InputDecoration(
-                        prefixIcon: Icon(Icons.search),
-                        hintText: 'Search contacts...',
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      onChanged: _search,
-                    ),
-                  ),
-                ),
-              )
-            : null,
       ),
+      drawer: _buildDrawer(context),
+      body: _contacts.isEmpty
+          ? _buildEmptyState()
+          : ListView.separated(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              itemCount: _contacts.length,
+              separatorBuilder: (_, __) =>
                   const Divider(height: 1, indent: 72, color: Color(0xFFEDEDF3)),
               itemBuilder: (context, index) {
                 final contact = _contacts[index];
